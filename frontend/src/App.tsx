@@ -23,12 +23,30 @@ function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState([])
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
 
-  function onConnect(connection: Connection) {
+  async function onConnect(connection: Connection) {
     setEdges((eds) => addEdge(connection, eds))
+
+    await fetch("http://localhost:8080/edges", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        id: Date.now().toString(),
+        source: connection.source,
+        target: connection.target
+      })
+    })
+  }
+
+  async function loadEdges() {
+    const res = await fetch("http://localhost:8080/edges")
+    const edges = await res.json()
+
+    setEdges(edges)
   }
   
   async function loadTasks() {
-
     const res = await fetch("http://localhost:8080/tasks")
     const tasks: Task[] = await res.json()
 
@@ -47,8 +65,6 @@ function App() {
     setNodes(formatted)
   }
 
-  
-
 
   async function deleteTask(id: string) {
     await fetch(`http://localhost:8080/tasks?id=${id}`, {
@@ -60,13 +76,10 @@ function App() {
 
 
   async function editTask(id: string) {
-
     const title = prompt("New title")
     if (!title) return
-
     const node = nodes.find(n => n.id === id)
     if (!node) return
-
     await fetch("http://localhost:8080/tasks", {
       method: "PUT",
       headers: {
@@ -129,30 +142,35 @@ function App() {
 
   
   async function savePosition(node: Node) {
-    await fetch("http://localhost:8080/tasks", {
+
+    const body = {
+      id: String(node.id),
+      title: String(node.data.label),
+      x: Math.round(node.position.x),
+      y: Math.round(node.position.y)
+    }
+
+    console.log("sending:", body)
+
+    const res = await fetch("http://localhost:8080/tasks", {
       method: "PUT",
       headers: {
-          "Content-Type": "application/json"
+        "Content-Type": "application/json"
       },
-        body: JSON.stringify({
-        id: node.id,
-        title: node.data.label,
-        x: node.position.x,
-        y: node.position.y
-      })
+      body: JSON.stringify(body)
     })
-  }
 
+    console.log("status:", res.status)
+  }
 
   useEffect(() => {
     loadTasks()
+    loadEdges()
   }, [])
 
-
   return (
-    
     <div style={{ width: "100vw", height: "100vh" }}>
-    
+
       <button
         onClick={addTask}
         style={{
@@ -184,7 +202,6 @@ function App() {
         <Controls />
       </ReactFlow>
     </div>
-    
   )
 }
 

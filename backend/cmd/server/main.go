@@ -41,11 +41,32 @@ func main() {
 		case http.MethodPost:
 			taskHandler.CreateTask(w, r)
 
+		case http.MethodPut:
+			taskHandler.UpdateTask(w, r)
+
 		case http.MethodDelete:
 			taskHandler.DeleteTask(w, r)
 
 		default:
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		}
+
+	})
+
+	edgeHandler := &handler.EdgeHandler{
+		Edges: []model.Edge{},
+	}
+
+	mux.HandleFunc("/edges", func(w http.ResponseWriter, r *http.Request) {
+
+		switch r.Method {
+
+		case http.MethodGet:
+			edgeHandler.GetEdges(w, r)
+
+		case http.MethodPost:
+			edgeHandler.CreateEdge(w, r)
+
 		}
 
 	})

@@ -50,3 +50,30 @@ func (h *TaskHandler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 }
+
+// UPDATE
+func (h *TaskHandler) UpdateTask(w http.ResponseWriter, r *http.Request) {
+
+	var updated model.Task
+
+	err := json.NewDecoder(r.Body).Decode(&updated)
+	if err != nil {
+		http.Error(w, "invalid body", http.StatusBadRequest)
+		return
+	}
+
+	for i, task := range h.Tasks {
+
+		if task.ID == updated.ID {
+
+			h.Tasks[i].Title = updated.Title
+			h.Tasks[i].X = updated.X
+			h.Tasks[i].Y = updated.Y
+
+			json.NewEncoder(w).Encode(h.Tasks[i])
+			return
+		}
+	}
+
+	http.Error(w, "task not found", http.StatusNotFound)
+}
