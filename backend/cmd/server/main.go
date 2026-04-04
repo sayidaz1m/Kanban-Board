@@ -67,8 +67,9 @@ func main() {
 		case http.MethodPost:
 			edgeHandler.CreateEdge(w, r)
 
+		case http.MethodDelete:
+			edgeHandler.DeleteEdge(w, r)
 		}
-
 	})
 
 	server := &http.Server{

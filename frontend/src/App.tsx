@@ -75,11 +75,33 @@ function App() {
   }
 
 
-  async function editTask(id: string) {
-    const title = prompt("New title")
-    if (!title) return
-    const node = nodes.find(n => n.id === id)
-    if (!node) return
+  async function editTask(id: string, title: string) {
+    let x = 0
+    let y = 0
+    let found = false
+
+    setNodes((nds) =>
+      nds.map((n) => {
+        if (n.id === id) {
+          x = n.position.x
+          y = n.position.y
+          found = true
+
+          return {
+            ...n,
+            data: {
+              ...n.data,
+              label: title
+            }
+          }
+        }
+
+        return n
+      })
+    )
+
+    if (!found) return
+
     await fetch("http://localhost:8080/tasks", {
       method: "PUT",
       headers: {
@@ -88,24 +110,10 @@ function App() {
       body: JSON.stringify({
         id,
         title,
-        x: node.position.x,
-        y: node.position.y
+        x: Math.round(x),
+        y: Math.round(y)
       })
     })
-
-    setNodes((nds) =>
-      nds.map(n =>
-        n.id === id
-          ? {
-            ...n,
-            data: {
-              ...n.data,
-              label: title
-            }
-          }
-        : n
-      )
-    )
   }
 
 
@@ -140,7 +148,21 @@ function App() {
     ])
   }
 
+
+  async function deleteEdge(id: string) {
+    await fetch(`http://localhost:8080/edges?id=${id}`, {
+      method: "DELETE"
+    })
+
+    setEdges((eds) => eds.filter((e) => e.id !== id))
+  }
+
+
+  async function saveViewport(viewport: { x: number; y: number; zoom: number }) {
+    localStorage.setItem("viewport", JSON.stringify(viewport))
+  }
   
+
   async function savePosition(node: Node) {
 
     const body = {
@@ -168,6 +190,11 @@ function App() {
     loadEdges()
   }, [])
 
+  const savedViewport = localStorage.getItem("viewport")
+  const defaultViewport = savedViewport
+    ? JSON.parse(savedViewport)
+    : { x: 0, y: 0, zoom: 1 }
+
 
   return (
     <div style={{ width: "100vw", height: "100vh" }}>
@@ -189,16 +216,19 @@ function App() {
         + Add Task
       </button>
         
-      <ReactFlow 
+      <ReactFlow
         proOptions={{ hideAttribution: true }}
-        nodes={nodes} 
-        edges={edges} 
-        onNodesChange={onNodesChange} 
-        onEdgesChange={onEdgesChange} 
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
         onConnect={onConnect}
-        nodeTypes={nodeTypes} 
-        onNodeDragStop={(_, node) => savePosition(node)} 
-        fitView>
+        onEdgeDoubleClick={(_, edge) => deleteEdge(edge.id)}
+        nodeTypes={nodeTypes}
+        onNodeDragStop={(_, node) => savePosition(node)}
+        onMoveEnd={(_, viewport) => saveViewport(viewport)}
+        defaultViewport={defaultViewport}
+        >
         <Background gap={20} size={1} color="#2a2a2a" />
         <Controls />
       </ReactFlow>
