@@ -4,7 +4,7 @@ import type { Node, Connection } from "reactflow"
 import "reactflow/dist/style.css"
 import BlueprintNode from "./components/BlueprintNode"
 import { addEdge, useEdgesState } from "reactflow"
-import { MiniMap, Controls } from "reactflow"
+import { Controls } from "reactflow"
 
 
 type Task = {
@@ -168,6 +168,7 @@ function App() {
     loadEdges()
   }, [])
 
+
   return (
     <div style={{ width: "100vw", height: "100vh" }}>
 
@@ -187,20 +188,21 @@ function App() {
         }}>
         + Add Task
       </button>
-
+        
       <ReactFlow 
+        proOptions={{ hideAttribution: true }}
         nodes={nodes} 
         edges={edges} 
         onNodesChange={onNodesChange} 
-        onEdgesChange={onEdgesChange}
+        onEdgesChange={onEdgesChange} 
         onConnect={onConnect}
         nodeTypes={nodeTypes} 
         onNodeDragStop={(_, node) => savePosition(node)} 
         fitView>
         <Background gap={20} size={1} color="#2a2a2a" />
-        <MiniMap />
         <Controls />
       </ReactFlow>
+
     </div>
   )
 }
